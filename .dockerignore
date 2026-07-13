@@ -1,0 +1,9 @@
+.git
+.github
+.tx
+coverage
+docs
+node_modules
+npm-debug.log
+test
+

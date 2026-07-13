@@ -1,0 +1,23 @@
+name: editor-goong
+
+services:
+  editor:
+    container_name: editor_goong
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      PGHOST: host.docker.internal
+      PGPORT: ${POSTGIS_PORT:-5534}
+      PGDATABASE: ${POSTGRES_DB:-auto_road}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-Goong@2023!@#}
+      EDITOR_TABLE: ${EDITOR_TABLE:-public.goong_road}
+      EDITOR_MAX_WAYS: ${EDITOR_MAX_WAYS:-5000}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 127.0.0.1:${EDITOR_PORT:-8081}:8080
+    restart: unless-stopped

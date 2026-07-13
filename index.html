@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset='utf-8'>
-    <title>iD</title>
+    <title>Goong Road Editor</title>
     <link rel='stylesheet' href='dist/iD.css'>
     <link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
@@ -46,9 +46,21 @@
           container.style.padding = '20px';
 
         } else {
+          if (!window.location.hash) {
+            window.location.hash = 'map=16/21.02850/105.85420';
+          }
+
+          var localConnection = {
+            url: window.location.origin,
+            apiUrl: window.location.origin,
+            client_id: 'goong-postgis-editor',
+            access_token: 'local-docker-editor'
+          };
           var context = iD.coreContext()
             .assetPath('dist/')
             .containerNode(container);
+          context.connection().apiConnections([localConnection]);
+          context.preauth(localConnection);
           window.context = window.id = context;  // for debugging
           context.init();
 

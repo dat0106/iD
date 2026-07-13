@@ -1,5 +1,7 @@
 # iD - friendly JavaScript editor for [OpenStreetMap](https://www.openstreetmap.org/)
 
+This fork includes a Dockerized PostGIS road editor. See [README.goong.md](README.goong.md) for the local database connection on port `5534`, runtime, and save behavior.
+
 [![build](https://github.com/openstreetmap/iD/workflows/build/badge.svg)](https://github.com/openstreetmap/iD/actions?query=workflow%3A%22build%22)
 
 ## Basics
