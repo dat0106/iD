@@ -38,6 +38,7 @@
     "dist:svg:temaki": "svg-sprite --symbol --symbol-dest . --shape-id-generator \"temaki-%s\" --symbol-sprite dist/img/temaki-sprite.svg node_modules/@rapideditor/temaki/icons/*.svg",
     "dist:svg:pinhead": "svg-sprite --symbol --symbol-dest . --shape-id-generator \"pinhead-%s\" --symbol-sprite dist/img/pinhead-sprite.svg node_modules/@waysidemapping/pinhead/dist/icons/*.svg",
     "imagery": "node scripts/update_imagery.js",
+    "import:osm": "bash scripts/import_osm_reference.sh",
     "lint": "eslint config scripts server test/spec modules",
     "lint:fix": "eslint scripts server test/spec modules --fix",
     "start": "run-s start:watch",

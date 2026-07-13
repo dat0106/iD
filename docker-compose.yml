@@ -16,6 +16,9 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-Goong@2023!@#}
       EDITOR_TABLE: ${EDITOR_TABLE:-public.goong_road}
       EDITOR_MAX_WAYS: ${EDITOR_MAX_WAYS:-5000}
+      EDITOR_DEFAULT_SOURCE: ${EDITOR_DEFAULT_SOURCE:-goong}
+      GOONG_API_TOKEN: ${GOONG_API_TOKEN:-local-docker-editor}
+      OSM_CLIENT_ID: ${OSM_CLIENT_ID:-0tmNTmd0Jo1dQp4AUmMBLtGiD9YpMuXzHefitcuVStc}
     extra_hosts:
       - host.docker.internal:host-gateway
     ports:

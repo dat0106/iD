@@ -672,6 +672,16 @@ export function createPostgisOsmApi(options = {}) {
     const { pathname } = url;
     const method = request.method || 'GET';
 
+    if (pathname === '/editor-config.json') {
+      const defaultSource = process.env.EDITOR_DEFAULT_SOURCE === 'osm' ? 'osm' : 'goong';
+      sendJSON(response, 200, {
+        defaultSource,
+        osmClientId: process.env.OSM_CLIENT_ID || '0tmNTmd0Jo1dQp4AUmMBLtGiD9YpMuXzHefitcuVStc',
+        goongAccessToken: process.env.GOONG_API_TOKEN || 'local-docker-editor'
+      });
+      return true;
+    }
+
     if (pathname === '/health') {
       try {
         await pool.query('SELECT 1');

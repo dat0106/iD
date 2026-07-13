@@ -1,50 +1,70 @@
-import {
-    select as d3_select
-} from 'd3-selection';
-
 import { t } from '../core/localizer';
 import { modeBrowse } from '../modes/browse';
 
 
 export function uiSourceSwitch(context) {
-    var keys;
+    var keys = [];
+    var rootSelection;
 
 
-    function click(d3_event) {
+    function sourceKey(source, index) {
+        return source.id || source.apiUrl || source.url || index;
+    }
+
+
+    function sourceLabel(source, index) {
+        if (source.name) return source.name;
+        return index === 0 ? t('source_switch.live') : t('source_switch.dev');
+    }
+
+
+    function isActive(source) {
+        var osm = context.connection();
+        if (!osm) return false;
+        return osm.getApiUrlRoot() === (source.apiUrl || source.url);
+    }
+
+
+    function render(selection) {
+        rootSelection = selection;
+
+        selection
+            .selectAll('a.source-option')
+            .data(keys, sourceKey)
+            .join('a')
+            .attr('href', '#')
+            .attr('class', 'chip source-option')
+            .attr('data-source', source => source.id || null)
+            .attr('aria-pressed', source => isActive(source) ? 'true' : 'false')
+            .attr('title', (source, index) => source.description || sourceLabel(source, index))
+            .classed('active', isActive)
+            .text(sourceLabel)
+            .on('click', click);
+    }
+
+
+    function click(d3_event, source) {
         d3_event.preventDefault();
 
         var osm = context.connection();
         if (!osm) return;
+        if (isActive(source)) return;
 
         if (context.inIntro()) return;
 
         if (context.history().hasChanges() &&
             !window.confirm(t('source_switch.lose_changes'))) return;
 
-        var isLive = d3_select(this)
-            .classed('live');
-
-        isLive = !isLive;
         context.enter(modeBrowse(context));
         context.history().clearSaved();          // remove saved history
         context.flush();                         // remove stored data
 
-        d3_select(this)
-            .classed('live', isLive)
-            .classed('chip', isLive)
-            .text('')
-            .call(isLive ? t.append('source_switch.live') : t.append('source_switch.dev'));
-
-        osm.switch(isLive ? keys[0] : keys[1]);  // switch connection (warning: dispatches 'change' event)
+        osm.switch(source);  // warning: dispatches 'change' event
+        render(rootSelection);
     }
 
     var sourceSwitch = function(selection) {
-        selection
-            .append('a')
-            .attr('href', '#')
-            .call(t.append('source_switch.live'))
-            .attr('class', 'live chip')
-            .on('click', click);
+        render(selection);
     };
 
 

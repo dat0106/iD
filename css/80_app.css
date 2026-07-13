@@ -5053,8 +5053,15 @@ img.tile-debug {
     margin: 0 3px;
 }
 
-.source-switch a.chip.live {
-    background: #d32232;
+.source-switch {
+    gap: 2px;
+}
+.source-switch a.chip.source-option {
+    background: rgba(255,255,255,.12);
+    color: #eee;
+}
+.source-switch a.chip.source-option.active {
+    background: #16836f;
     color: #fff;
 }
 

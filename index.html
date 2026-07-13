@@ -40,7 +40,7 @@
       document.getElementsByTagName('head')[0].appendChild(newScript);
 
 
-      function checkScript() {
+      async function checkScript() {
         if (typeof iD === 'undefined' || !iD.utilDetect().support) {
           container.innerHTML = 'Sorry, your browser is not currently supported. Please use another <a href="https://github.com/openstreetmap/iD#basics">browser</a> or <a href="https://wiki.openstreetmap.org/wiki/Editors">editor</a> to contribute to the map.';
           container.style.padding = '20px';
@@ -50,17 +50,40 @@
             window.location.hash = 'map=16/21.02850/105.85420';
           }
 
-          var localConnection = {
+          var runtimeConfig = {};
+          try {
+            var configResponse = await fetch('/editor-config.json');
+            if (configResponse.ok) runtimeConfig = await configResponse.json();
+          } catch (error) {
+            console.warn('Could not load editor runtime configuration', error);
+          }
+
+          var osmConnection = {
+            id: 'osm',
+            name: 'OSM',
+            description: 'OpenStreetMap API',
+            url: 'https://www.openstreetmap.org',
+            apiUrl: 'https://api.openstreetmap.org',
+            client_id: runtimeConfig.osmClientId || '0tmNTmd0Jo1dQp4AUmMBLtGiD9YpMuXzHefitcuVStc'
+          };
+          var goongConnection = {
+            id: 'goong',
+            name: 'Goong',
+            description: 'Goong PostGIS',
             url: window.location.origin,
             apiUrl: window.location.origin,
             client_id: 'goong-postgis-editor',
-            access_token: 'local-docker-editor'
+            access_token: runtimeConfig.goongAccessToken || 'local-docker-editor'
           };
+          var connections = [osmConnection, goongConnection];
+          var defaultConnection = runtimeConfig.defaultSource === 'osm'
+            ? osmConnection
+            : goongConnection;
           var context = iD.coreContext()
             .assetPath('dist/')
             .containerNode(container);
-          context.connection().apiConnections([localConnection]);
-          context.preauth(localConnection);
+          context.connection().apiConnections(connections);
+          context.preauth(defaultConnection);
           window.context = window.id = context;  // for debugging
           context.init();
 
