@@ -37,9 +37,9 @@ Khi chuyen nguon, editor xoa graph/cache cua nguon cu. Neu dang co thay doi chua
 
 De Save len OSM, dang ky OAuth2 application voi redirect URI `http://127.0.0.1:8081/land.html`, sau do dat `OSM_CLIENT_ID` trong `.env`. `EDITOR_DEFAULT_SOURCE` nhan `goong` hoac `osm`.
 
-## Import OSM PBF vao PostGIS
+## Import OSM PBF vao PostGIS 5534
 
-Script sau import snapshot OSM vao schema rieng `osm_reference`, khong ghi de `public.goong_road`:
+Script sau import cac OSM way co tag `highway=*` vao bang rieng `public.osm_editor`, khong ghi de `public.goong_road`:
 
 ```bash
 npm run import:osm
@@ -51,9 +51,9 @@ Mac dinh script dung file:
 /home/ledat/dat/build-routing/build/valhalla/geofabrik-vietnam.osm.pbf
 ```
 
-Ket qua la cac bang `planet_osm_point`, `planet_osm_line`, `planet_osm_polygon` va `planet_osm_roads` trong schema `osm_reference`, kem spatial index cua osm2pgsql. Day la snapshot phu hop de query, render va doi chieu. No khong phai database OSM API day du, vi khong cung cap user, changeset, version history va quan he chinh sua ma iD can.
+Ket qua la mot bang `public.osm_editor` trong database `auto_road` tren host port `5534`. Bang co `osm_id`, toan bo OSM tags dang `jsonb`, geometry `LineString` SRID 4326, unique index tren `osm_id` va GiST index tren `geom`. Day la snapshot road phu hop de editor noi bo query va chinh sua; no khong phai database OSM API day du.
 
-Script dung output `pgsql` de tuong thich voi `osm2pgsql 1.6` dang co tren may va tao bo bang quen thuoc. Neu xay pipeline moi lau dai, nen chuyen sang flex output. Khi su dung hoac phat hanh du lieu OSM, can ghi attribution `OpenStreetMap contributors` va tuan thu ODbL.
+Script dung flex output cua `osm2pgsql 1.6`. Co the doi dich bang `OSM_EDITOR_SCHEMA`, `OSM_EDITOR_TABLE`, `PGDATABASE` va `PGPORT`. Khi su dung hoac phat hanh du lieu OSM, can ghi attribution `OpenStreetMap contributors` va tuan thu ODbL.
 
 Dat `OSM_KEEP_SLIM=1` neu can giu middle tables de cap nhat bang change file sau nay. Import toan Viet Nam can them dung luong PostGIS va co the chay trong nhieu phut.
 

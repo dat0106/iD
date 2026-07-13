@@ -305,11 +305,15 @@ export function createPostgisOsmApi(options = {}) {
   function tagsFromRow(row) {
     let tags = {};
     if (row._extra_tags) {
-      try {
-        const extra = JSON.parse(row._extra_tags);
-        if (extra && typeof extra === 'object' && !Array.isArray(extra)) tags = extra;
-      } catch {
-        // Legacy imports may contain non-JSON text. Known columns remain editable.
+      if (typeof row._extra_tags === 'object' && !Array.isArray(row._extra_tags)) {
+        tags = row._extra_tags;
+      } else {
+        try {
+          const extra = JSON.parse(row._extra_tags);
+          if (extra && typeof extra === 'object' && !Array.isArray(extra)) tags = extra;
+        } catch {
+          // Legacy imports may contain non-JSON text. Known columns remain editable.
+        }
       }
     }
 

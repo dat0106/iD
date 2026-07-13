@@ -11,29 +11,34 @@ PGDATABASE="${PGDATABASE:-auto_road}"
 PGUSER="${PGUSER:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-Goong@2023!@#}"
 
-OSM_SCHEMA="${OSM_SCHEMA:-osm_reference}"
-OSM_PREFIX="${OSM_PREFIX:-planet_osm}"
+export OSM_EDITOR_SCHEMA="${OSM_EDITOR_SCHEMA:-public}"
+export OSM_EDITOR_TABLE="${OSM_EDITOR_TABLE:-osm_editor}"
+OSM_MIDDLE_SCHEMA="${OSM_MIDDLE_SCHEMA:-osm_editor_import}"
 OSM2PGSQL_CACHE="${OSM2PGSQL_CACHE:-800}"
 OSM2PGSQL_PROCESSES="${OSM2PGSQL_PROCESSES:-4}"
 OSM_KEEP_SLIM="${OSM_KEEP_SLIM:-0}"
+STYLE_PATH="${SCRIPT_DIR}/osm_editor.lua"
 
 if [[ ! -f "${PBF_PATH}" ]]; then
   echo "OSM PBF not found: ${PBF_PATH}" >&2
   exit 1
 fi
 
-if [[ ! "${OSM_SCHEMA}" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-  echo "Invalid OSM_SCHEMA: ${OSM_SCHEMA}" >&2
-  exit 1
-fi
-
-if [[ ! "${OSM_PREFIX}" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-  echo "Invalid OSM_PREFIX: ${OSM_PREFIX}" >&2
-  exit 1
-fi
+for identifier in OSM_EDITOR_SCHEMA OSM_EDITOR_TABLE OSM_MIDDLE_SCHEMA; do
+  value="${!identifier}"
+  if [[ ! "${value}" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+    echo "Invalid ${identifier}: ${value}" >&2
+    exit 1
+  fi
+done
 
 command -v osm2pgsql >/dev/null || {
   echo "osm2pgsql is required" >&2
+  exit 1
+}
+
+command -v psql >/dev/null || {
+  echo "psql is required" >&2
   exit 1
 }
 
@@ -43,20 +48,19 @@ psql \
   -p "${PGPORT}" \
   -U "${PGUSER}" \
   -d "${PGDATABASE}" \
-  -c "CREATE SCHEMA IF NOT EXISTS \"${OSM_SCHEMA}\";"
+  -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE SCHEMA IF NOT EXISTS \"${OSM_EDITOR_SCHEMA}\"; CREATE SCHEMA IF NOT EXISTS \"${OSM_MIDDLE_SCHEMA}\";"
 
 args=(
   --create
-  --output=pgsql
+  --output=flex
+  --style="${STYLE_PATH}"
   --slim
   --latlong
-  --hstore
   --extra-attributes
   --cache="${OSM2PGSQL_CACHE}"
   --number-processes="${OSM2PGSQL_PROCESSES}"
-  --output-pgsql-schema="${OSM_SCHEMA}"
-  --middle-schema="${OSM_SCHEMA}"
-  --prefix="${OSM_PREFIX}"
+  --middle-schema="${OSM_MIDDLE_SCHEMA}"
+  --prefix="${OSM_EDITOR_TABLE}"
   --host="${PGHOST}"
   --port="${PGPORT}"
   --username="${PGUSER}"
@@ -67,7 +71,7 @@ if [[ "${OSM_KEEP_SLIM}" != "1" ]]; then
   args+=(--drop)
 fi
 
-echo "Importing ${PBF_PATH} into ${PGDATABASE}.${OSM_SCHEMA}"
+echo "Importing ${PBF_PATH} into ${PGHOST}:${PGPORT}/${PGDATABASE}.${OSM_EDITOR_SCHEMA}.${OSM_EDITOR_TABLE}"
 osm2pgsql "${args[@]}" "${PBF_PATH}"
 
 psql \
@@ -76,6 +80,6 @@ psql \
   -p "${PGPORT}" \
   -U "${PGUSER}" \
   -d "${PGDATABASE}" \
-  -c "ANALYZE \"${OSM_SCHEMA}\".\"${OSM_PREFIX}_point\"; ANALYZE \"${OSM_SCHEMA}\".\"${OSM_PREFIX}_line\"; ANALYZE \"${OSM_SCHEMA}\".\"${OSM_PREFIX}_polygon\"; ANALYZE \"${OSM_SCHEMA}\".\"${OSM_PREFIX}_roads\";"
+  -c "CREATE UNIQUE INDEX IF NOT EXISTS \"${OSM_EDITOR_TABLE}_osm_id_idx\" ON \"${OSM_EDITOR_SCHEMA}\".\"${OSM_EDITOR_TABLE}\" (osm_id); CREATE INDEX IF NOT EXISTS \"${OSM_EDITOR_TABLE}_geom_idx\" ON \"${OSM_EDITOR_SCHEMA}\".\"${OSM_EDITOR_TABLE}\" USING GIST (geom); ANALYZE \"${OSM_EDITOR_SCHEMA}\".\"${OSM_EDITOR_TABLE}\";"
 
-echo "OSM reference import complete: ${PGDATABASE}.${OSM_SCHEMA}"
+echo "OSM editor import complete: ${PGHOST}:${PGPORT}/${PGDATABASE}.${OSM_EDITOR_SCHEMA}.${OSM_EDITOR_TABLE}"
